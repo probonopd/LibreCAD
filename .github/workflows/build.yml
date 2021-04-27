@@ -1,0 +1,37 @@
+name: AppImage
+on: [push]
+jobs:
+  AppImage:
+    runs-on: ubuntu-20.04 # focal
+    steps:
+      - uses: actions/checkout@v2
+      
+      - run: |
+             sudo apt-get -qq -f install imagemagick qtbase5-dev libqt5svg5-dev libgl-dev libmuparser-dev libboost-dev libfreetype6-dev libicu-dev pkg-config
+             sudo apt-get -q upgrade
+             
+      - run: |
+             qmake -r librecad.pro CONFIG+=release PREFIX=/usr
+             make -j$(nproc)
+             mkdir -p appdir/usr/bin appdir/usr/share/librecad appdir/usr/share/applications appdir/usr/share/icons/hicolor/256x256/apps
+             cp unix/librecad unix/ttf2lff appdir/usr/bin/
+             cp desktop/librecad.desktop appdir/usr/share/applications/
+             cp -r librecad/support/doc librecad/support/fonts librecad/support/library librecad/support/patterns appdir/usr/share/librecad/
+             convert -resize 256x256 "desktop/graphics_icons_and_splash/Icon LibreCAD/Icon_Librecad.svg" appdir/usr/share/icons/hicolor/256x256/apps/librecad.png
+             find appdir/
+             wget -c https://github.com/$(wget -q https://github.com/probonopd/go-appimage/releases -O - | grep "appimagetool-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
+             chmod +x appimagetool-*.AppImage
+             ./appimagetool-*.AppImage -s deploy appdir/usr/share/applications/*.desktop || true
+             VERSION=0.0 ./appimagetool-*.AppImage appdir/
+             mkdir -p out/
+             cp Libre*AppImage out/
+             
+      - uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: out/*
+          tag: continuous
+          # tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
+          prerelease: true
