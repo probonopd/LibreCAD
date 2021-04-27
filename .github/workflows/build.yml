@@ -21,7 +21,7 @@ jobs:
              find appdir/
              wget -c https://github.com/$(wget -q https://github.com/probonopd/go-appimage/releases -O - | grep "appimagetool-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
              chmod +x appimagetool-*.AppImage
-             ./appimagetool-*.AppImage -s deploy appdir/usr/share/applications/*.desktop || true
+             ./appimagetool-*.AppImage -s deploy appdir/usr/share/applications/*.desktop
              VERSION=0.0 ./appimagetool-*.AppImage appdir/
              mkdir -p out/
              cp Libre*AppImage out/
